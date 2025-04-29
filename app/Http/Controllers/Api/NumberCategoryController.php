@@ -10,7 +10,7 @@ use Illuminate\Http\JsonResponse;
  * @OA\Info(
  *     version="1.0.0",
  *     title="Number Categorization API",
- *     description="API for categorizing numbers based on length and digit patterns",
+ *     description="API for categorizing numbers based on their digit patterns. Numbers must be between 3 and 9 digits long.",
  *     @OA\Contact(
  *         email="admin@example.com"
  *     )
@@ -25,28 +25,47 @@ class NumberCategoryController extends Controller
     /**
      * @OA\Post(
      *     path="/categorize",
-     *     summary="Categorize a number based on its length and digit patterns",
+     *     summary="Categorize a number based on its digit patterns",
+     *     description="Categorizes a number into Platinum, Gold, Silver, or Bronze based on the following rules:
+     *     - Platinum: All digits are repeated (e.g., '111') or two repeated groups with equal length (e.g., '7771111')
+     *     - Gold: Three or more pairs of repeated digits (e.g., '555222333')
+     *     - Silver: At least one pair of repeated digits (e.g., '5543022')
+     *     - Bronze: No repeated digits (e.g., '1234567')",
      *     tags={"Number Categorization"},
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             required={"number", "length"},
-     *             @OA\Property(property="number", type="string", example="5543022"),
-     *             @OA\Property(property="length", type="integer", example=7)
+     *             required={"number"},
+     *             @OA\Property(
+     *                 property="number",
+     *                 type="string",
+     *                 example="5543022",
+     *                 description="The number to categorize. Must be between 3 and 9 digits long."
+     *             )
      *         )
      *     ),
      *     @OA\Response(
      *         response=200,
      *         description="Successful operation",
      *         @OA\JsonContent(
-     *             @OA\Property(property="category", type="string", example="Gold")
+     *             @OA\Property(
+     *                 property="category",
+     *                 type="string",
+     *                 example="Silver",
+     *                 description="The category of the number (Platinum, Gold, Silver, or Bronze)"
+     *             )
      *         )
      *     ),
      *     @OA\Response(
      *         response=400,
      *         description="Invalid input",
      *         @OA\JsonContent(
-     *             @OA\Property(property="error", type="string", example="Length must be between 3 and 9")
+     *             @OA\Property(
+     *                 property="error",
+     *                 type="string",
+     *                 example="Number length must be between 3 and 9",
+     *                 description="Error message describing the validation failure"
+     *             )
      *         )
      *     )
      * )
@@ -55,19 +74,11 @@ class NumberCategoryController extends Controller
     {
         // Validate input
         $request->validate([
-            'number' => 'required|string',
-            'length' => 'required|integer|min:3|max:9'
+            'number' => 'required|string|min:3|max:9'
         ]);
 
         $number = $request->input('number');
-        $length = $request->input('length');
-
-        // Check if number length matches the provided length
-        if (strlen($number) !== $length) {
-            return response()->json([
-                'error' => "Number length must be equal to the provided length"
-            ], 400);
-        }
+        $length = strlen($number);
 
         // Get the category
         $category = $this->determineCategory($number, $length);
@@ -82,7 +93,7 @@ class NumberCategoryController extends Controller
      * 
      * Rules:
      * - Platinum: All digits are repeated or two repeated groups with equal length
-     * - Gold: Two pairs of repeated digits
+     * - Gold: Three pairs of repeated digits
      * - Silver: At least one pair of repeated digits
      * - Bronze: No repeated digits
      */
@@ -106,14 +117,17 @@ class NumberCategoryController extends Controller
             }
         }
 
-        // Check for Gold pattern (two pairs of repeated digits)
+        // Count pairs by looking at adjacent digits
         $pairs = 0;
-        foreach ($digitCounts as $count) {
-            if ($count >= 2) {
+        for ($i = 0; $i < $length - 1; $i++) {
+            if ($number[$i] === $number[$i + 1]) {
                 $pairs++;
+                $i++; // Skip the next digit since we've counted it as part of a pair
             }
         }
-        if ($pairs >= 2) {
+
+        // Check for Gold pattern (three pairs of repeated digits)
+        if ($pairs >= 3) {
             return 'Gold';
         }
 

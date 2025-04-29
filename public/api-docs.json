@@ -1,0 +1,80 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "version": "1.0.0",
+    "title": "Number Categorization API",
+    "description": "API for categorizing numbers based on their digit patterns. Numbers must be between 3 and 9 digits long.",
+    "contact": {
+      "email": "admin@example.com"
+    }
+  },
+  "servers": [
+    {
+      "description": "Local API server",
+      "url": "http://localhost:8000/api"
+    }
+  ],
+  "paths": {
+    "/categorize": {
+      "post": {
+        "summary": "Categorize a number based on its digit patterns",
+        "description": "Categorizes a number into Platinum, Gold, Silver, or Bronze based on the following rules:\n- Platinum: All digits are repeated (e.g., '111') or two repeated groups with equal length (e.g., '7771111')\n- Gold: Three or more pairs of repeated digits (e.g., '555222333')\n- Silver: At least one pair of repeated digits (e.g., '5543022')\n- Bronze: No repeated digits (e.g., '1234567')",
+        "tags": ["Number Categorization"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["number"],
+                "properties": {
+                  "number": {
+                    "type": "string",
+                    "example": "5543022",
+                    "description": "The number to categorize. Must be between 3 and 9 digits long."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "category": {
+                      "type": "string",
+                      "example": "Silver",
+                      "description": "The category of the number (Platinum, Gold, Silver, or Bronze)"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Number length must be between 3 and 9",
+                      "description": "Error message describing the validation failure"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+} 

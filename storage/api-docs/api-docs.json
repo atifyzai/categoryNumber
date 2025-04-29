@@ -2,7 +2,7 @@
     "openapi": "3.0.0",
     "info": {
         "title": "Number Categorization API",
-        "description": "API for categorizing numbers based on length and digit patterns",
+        "description": "API for categorizing numbers based on their digit patterns. Numbers must be between 3 and 9 digits long.",
         "contact": {
             "email": "admin@example.com"
         },
@@ -20,7 +20,8 @@
                 "tags": [
                     "Number Categorization"
                 ],
-                "summary": "Categorize a number based on its length and digit patterns",
+                "summary": "Categorize a number based on its digit patterns",
+                "description": "Categorizes a number into Platinum, Gold, Silver, or Bronze based on the following rules:\r\n     *     - Platinum: All digits are repeated (e.g., '111') or two repeated groups with equal length (e.g., '7771111')\r\n     *     - Gold: Three or more pairs of repeated digits (e.g., '555222333')\r\n     *     - Silver: At least one pair of repeated digits (e.g., '5543022')\r\n     *     - Bronze: No repeated digits (e.g., '1234567')",
                 "operationId": "8e92ba300cf7b51d05361c765f1151e3",
                 "requestBody": {
                     "required": true,
@@ -28,17 +29,13 @@
                         "application/json": {
                             "schema": {
                                 "required": [
-                                    "number",
-                                    "length"
+                                    "number"
                                 ],
                                 "properties": {
                                     "number": {
+                                        "description": "The number to categorize. Must be between 3 and 9 digits long.",
                                         "type": "string",
                                         "example": "5543022"
-                                    },
-                                    "length": {
-                                        "type": "integer",
-                                        "example": 7
                                     }
                                 },
                                 "type": "object"
@@ -54,8 +51,9 @@
                                 "schema": {
                                     "properties": {
                                         "category": {
+                                            "description": "The category of the number (Platinum, Gold, Silver, or Bronze)",
                                             "type": "string",
-                                            "example": "Gold"
+                                            "example": "Silver"
                                         }
                                     },
                                     "type": "object"
@@ -70,8 +68,9 @@
                                 "schema": {
                                     "properties": {
                                         "error": {
+                                            "description": "Error message describing the validation failure",
                                             "type": "string",
-                                            "example": "Length must be between 3 and 9"
+                                            "example": "Number length must be between 3 and 9"
                                         }
                                     },
                                     "type": "object"
