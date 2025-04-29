@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Log;
 
 /**
  * @OA\Info(
@@ -93,14 +94,15 @@ class NumberCategoryController extends Controller
      * 
      * Rules:
      * - Platinum: All digits are repeated or two repeated groups with equal length
-     * - Gold: Three pairs of repeated digits
-     * - Silver: At least one pair of repeated digits
+     * - Gold: One group of 4 or more repeated digits
+     * - Silver: One group of 3 repeated digits
      * - Bronze: No repeated digits
      */
     private function determineCategory(string $number, int $length): string
     {
         // Count occurrences of each digit
         $digitCounts = array_count_values(str_split($number));
+        Log::info($digitCounts);
         
         // Check for all repeated digits (Platinum)
         if (count($digitCounts) === 1) {
@@ -117,23 +119,18 @@ class NumberCategoryController extends Controller
             }
         }
 
-        // Count pairs by looking at adjacent digits
-        $pairs = 0;
-        for ($i = 0; $i < $length - 1; $i++) {
-            if ($number[$i] === $number[$i + 1]) {
-                $pairs++;
-                $i++; // Skip the next digit since we've counted it as part of a pair
+        // Check for Gold pattern (one group of 4 or more repeated digits)
+        foreach ($digitCounts as $count) {
+            if ($count >= 4) {
+                return 'Gold';
             }
         }
 
-        // Check for Gold pattern (three pairs of repeated digits)
-        if ($pairs >= 3) {
-            return 'Gold';
-        }
-
-        // Check for Silver pattern (at least one pair)
-        if ($pairs >= 1) {
-            return 'Silver';
+        // Check for Silver pattern (one group of 3 repeated digits)
+        foreach ($digitCounts as $count) {
+            if ($count >= 3) {
+                return 'Silver';
+            }
         }
 
         // Default to Bronze
